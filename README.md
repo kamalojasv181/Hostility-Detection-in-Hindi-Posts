@@ -17,7 +17,7 @@ In order to cite, use the following BiBTeX code:
 To be added
 ```
 
-**Authors**: [Ojasv Kamal](https://github.com/kamalojasv181) [Adarsh Kumar](https://github.com/AdarshKumar712) and [Tejas Vaidhya](https://github.com/tejasvaidhyadev)
+**Authors**: [Ojasv Kamal](https://github.com/kamalojasv181), [Adarsh Kumar](https://github.com/AdarshKumar712) and [Tejas Vaidhya](https://github.com/tejasvaidhyadev)
 
 ## Overview
 
