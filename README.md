@@ -35,11 +35,28 @@ Refer our paper (#TODO add link) for complete details.
 
 ## Dependencies
 
+
+| Dependency | Version | Installation Command |
+| ---------- | ------- | -------------------- |
+| Python     | 3.8     | `conda create --name covid_entities python=3.8` and `conda activate covid_entities` |
+| PyTorch, cudatoolkit    | >=1.5.0, 10.1   | `conda install pytorch==1.5.0 cudatoolkit=10.1 -c pytorch` |
+| Transformers (Huggingface) | 3.5.1 | `pip install transformers==3.5.1` |
+| Scikit-learn | >=0.23.1 | `pip install scikit-learn==0.23.1` |
+| Pandas | 0.24.2 | `pip install pandas==0.24.2` |
+| Numpy | 1.18.5 | `pip install numpy==1.18.5` |
+| Emoji | 0.6.0 | `pip install emoji==0.6.0` |
+| Tqdm | 4.48.2| `pip install tqdm==4.48.2` |
+
+
 ## Setup Instruction 
 
 ## Trained Models
 
 ## Model Performance
+
+| Approach | Hostile | Defamation | Fake | Hate | Offensive | Weighted |
+| ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+
 
 ## Miscellaneous
 
