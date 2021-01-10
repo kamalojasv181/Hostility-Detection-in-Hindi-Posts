@@ -56,6 +56,8 @@ Refer our paper (#TODO add link) for complete details.
 
 | Approach | Hostile | Defamation | Fake | Hate | Offensive | Weighted |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+|Baseline Model|0.8422|0.3992|0.6869|0.4926|0.4198|0.542|
+|Indic-Bert Auxiliary Model|0.9583|0.42|0.7741|0.5725|0.6120|0.6250|
 
 
 ## Miscellaneous
