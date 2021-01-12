@@ -51,6 +51,7 @@ Refer our paper (#TODO add link) for complete details.
 ## Setup Instruction 
 
 ## Trained Models
+Our model weights used in the submission have been [released now].
 
 ## Model Performance
 
