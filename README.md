@@ -51,15 +51,19 @@ Refer our paper (#TODO add link) for complete details.
 ## Setup Instruction 
 
 ## Trained Models
-Our model weights used in the submission have been [released now] https://github.com/kamalojasv181/Hostility-Detection-in-Hindi-Posts/releases/tag/v0.0.1.
+Our model weights used in the submission have been [released now](https://github.com/kamalojasv181/Hostility-Detection-in-Hindi-Posts/releases/tag/v0.0.1).
 
 ## Model Performance
+
+Performance of our best model, i.e. Auxiliary Indic Bert on the Test Dataset.
 
 | Approach | Hostile | Defamation | Fake | Hate | Offensive | Weighted |
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 |Baseline Model|0.8422|0.3992|0.6869|0.4926|0.4198|0.542|
 |Indic-Bert Auxiliary Model|0.9583|0.42|0.7741|0.5725|0.6120|0.6250|
 
-
 ## Miscellaneous
+<ul>
+  <li> In case of any issues or any query, please contact [Ojasv Kamal](mailto: kamalojasv181@gmail.com)</li>
+</ul>
 
