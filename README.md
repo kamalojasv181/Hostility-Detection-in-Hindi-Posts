@@ -51,7 +51,7 @@ Refer our paper (#TODO add link) for complete details.
 ## Setup Instruction 
 
 ## Trained Models
-Our model weights used in the submission have been [released now].
+Our model weights used in the submission have been [released now] https://github.com/kamalojasv181/Hostility-Detection-in-Hindi-Posts/releases/tag/v0.0.1.
 
 ## Model Performance
 
