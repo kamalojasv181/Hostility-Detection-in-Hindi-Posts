@@ -72,6 +72,6 @@ Performance of our best model, i.e. Auxiliary Indic Bert on the Test Dataset.
 
 ## Miscellaneous
 <ul>
-  <li> In case of any issues or any query, please contact [Ojasv Kamal](mailto: kamalojasv181@gmail.com)</li>
+  <li> In case of any issues or any query, please contact <a href="mailto:kamalojasv181@gmail.com?">Ojasv Kamal</a></li>
 </ul>
 
