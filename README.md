@@ -14,7 +14,14 @@ Some important links: arxiv, poster.
 In order to cite, use the following BiBTeX code:
 
 ```
-To be added
+@misc{kamal2021hostility,
+      title={Hostility Detection in Hindi leveraging Pre-Trained Language Models}, 
+      author={Ojasv Kamal and Adarsh Kumar and Tejas Vaidhya},
+      year={2021},
+      eprint={2101.05494},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
 ```
 
 **Authors**: [Ojasv Kamal](https://github.com/kamalojasv181), [Adarsh Kumar](https://github.com/AdarshKumar712) and [Tejas Vaidhya](https://github.com/tejasvaidhyadev)
@@ -31,7 +38,7 @@ Hostile content on social platforms is ever increasing. This has led to the need
   <li> We incorporate the fine-tuned hostile vs. non-hostile detection model as anauxiliary model, and fuse it with the features of specific subcategory models(pre-trained models) of hostility category, with further fine-tuning.</li>
 </ol>
 
-Refer our paper (#TODO add link) for complete details.
+Refer our [paper](https://arxiv.org/abs/2101.05494) for complete details.
 
 ## Dependencies
 
@@ -49,6 +56,7 @@ Refer our paper (#TODO add link) for complete details.
 
 
 ## Setup Instruction 
+Will be included soon
 
 ## Trained Models
 Our model weights used in the submission have been [released now](https://github.com/kamalojasv181/Hostility-Detection-in-Hindi-Posts/releases/tag/v0.0.1).
