@@ -1,5 +1,10 @@
 ## Hostility Post Detection in Hindi
 
+---
+**NOTE**: We are currently in the process of updating the repo and scripts to resolve the issues along with some other changes as mentioned in [this](#updates-to-be-done) Section. The changes will be reflected pretty soon. Any other suggestions are warmly welcome.
+
+---
+
 Leveraging pre-trained Language models for Multidimensional Hostile post detection in Hindi - 3rd runner up at [CONSTRAINT 2021 Shared Task 2 - Hostile Post Detection in Hindi](https://constraint-shared-task-2021.github.io/), collocated with AAAI 2021.
 
 This repo contains:
@@ -69,6 +74,14 @@ Performance of our best model, i.e. Auxiliary Indic Bert on the Test Dataset.
 | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
 |Baseline Model|0.8422|0.3992|0.6869|0.4926|0.4198|0.542|
 |Indic-Bert Auxiliary Model|0.9583|0.42|0.7741|0.5725|0.6120|0.6250|
+
+## Updates to be done
+- [ ] Resolve issues with main_multitask_learning.py
+- [ ] Add seperate code for Multi-Label Generation (same as for other classification methods )
+- [ ] Some Minor changes in code and functions
+- [ ] Add Setup Instructions
+- [ ] Add corrected code for csv file generation
+- [ ] Colab Notebook on Usage 
 
 ## Miscellaneous
 <ul>
