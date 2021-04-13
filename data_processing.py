@@ -5,7 +5,6 @@ import emoji
 import string
 import csv
 
-
 class preprocessing():
     def __init__(self, csv_file_path):
         self.arr = []

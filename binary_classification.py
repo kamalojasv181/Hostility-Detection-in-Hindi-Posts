@@ -28,10 +28,6 @@ from transformers import (
     get_linear_schedule_with_warmup,
 )
 
-
-
-
-
 class CustomDataset(Dataset):
 
     def __init__(self, dataframe, tokenizer, max_len):
@@ -245,6 +241,3 @@ class bin_classifier():
         file_object = open('results.txt', 'a')
         file_object.write(f1_str)
         file_object.close()
-
-
-
