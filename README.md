@@ -77,11 +77,11 @@ Performance of our best model, i.e. Auxiliary Indic Bert on the Test Dataset.
 
 ## Updates to be done
 - [ ] Resolve issues with main_multitask_learning.py
-- [ ] Add seperate code for Multi-Label Generation (same as for other classification methods )
+- [ ] Add seperate code for Multi-Label classification (same as for other classification methods )
 - [ ] Some Minor changes in code and functions
 - [ ] Add Setup Instructions
 - [ ] Add corrected code for csv file generation
-- [ ] Colab Notebook on Usage 
+- [ ] Colab Notebook on Usage
 
 ## Miscellaneous
 <ul>
