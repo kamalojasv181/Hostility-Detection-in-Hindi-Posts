@@ -90,7 +90,7 @@ class ModelClass(torch.nn.Module):
 class bin_classifier():
     def __init__(self, arr, model_name, target, epochs, lr):
         self.output_dir = './models'
-        self.model_path = model_name      # try: 'ai4bharat/indic-bert' or "monsoon-nlp/hindi-tpu-electra", "monsoon-nlp/hindi-bert"
+        self.model_path = model_name 
         self.tokenizer_path = model_name
         self.max_len = 200
         self.TRAIN_BATCH_SIZE = 8
