@@ -1,3 +1,4 @@
+from data_processing import preprocessing
 import pandas as pd
 import numpy as np
 import torch
@@ -6,9 +7,9 @@ from sklearn import metrics
 import transformers
 import re
 import emoji
-import string
+import os
+from torch import cuda
 from sklearn.model_selection import train_test_split
-import csv
 
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
@@ -27,98 +28,9 @@ from transformers import (
     get_linear_schedule_with_warmup,
 )
 
-# # Setting up the device for GPU usage
-from torch import cuda
-device = 'cuda' if cuda.is_available() else 'cpu'
 
 
 
-csv_file_path = "./Dataset/Test Set Complete - test.csv"
-
-arr = []
-with open(csv_file_path) as csvDataFile:
-    csvReader = csv.reader(csvDataFile)
-    for row in csvReader:
-        arr.append(row)
-
-def give_emoji_free_text(text):
-    allchars = [str for str in text]
-    emoji_list = [c for c in allchars if c in emoji.UNICODE_EMOJI]
-    clean_text = ' '.join([str for str in text.split() if not any(i in str for i in emoji_list)])
-    return clean_text
-
-def strip_all_entities(text):
-        entity_prefixes = ['@']
-        for separator in  string.punctuation:
-            if separator not in entity_prefixes :
-                text = text.replace(separator,' ')
-        words = []
-        for word in text.split():
-            word = word.strip()
-            if word:
-                if word[0] not in entity_prefixes:
-                    words.append(word)
-        return ' '.join(words)
-
-for row in arr:
-    row[0] = re.sub(r'\w+:\/{2}[\d\w-]+(\.[\d\w-]+)*(?:(?:\/[^\s/]*))*', 'http', row[0])
-    row[0] = give_emoji_free_text(row[0])
-    row[0] = row[0].replace('\n','')
-    row[0] = strip_all_entities(row[0])
-
-# Returns true if s1 is substring of s2
-def isSubstring(s1, s2):
-    M = len(s1)
-    N = len(s2)
- 
-    # A loop to slide pat[] one by one 
-    for i in range(N - M + 1):
- 
-        # For current index i,
-        # check for pattern match 
-        for j in range(M):
-            if (s2[i + j] != s1[j]):
-                break
-             
-        if j + 1 == M :
-            return i
- 
-    return -1
-
-encoding = []
-for row in arr:
-    vector = [0,0,0,0,0]
-    if row[1][0:3] == 'non':
-        vector[0]= 1
-        encoding.append(vector)
-    else:
-        if isSubstring('hate', row[1]) >= 0:
-            vector[1] = 1
-        if isSubstring('fake', row[1]) >= 0:
-            vector[2] = 1
-        if isSubstring('defamation', row[1]) >= 0:
-            vector[3] = 1
-        if isSubstring('offensive', row[1]) >= 0:
-            vector[4] = 1
-        encoding.append(vector)
-
-for i in range(0,len(encoding)):
-   arr[i].append(encoding[i])
-
-
-
-for i in range(len(arr)):
-  arr[i] = [arr[i][0], arr[i][1], arr[i][5]]
-print(arr[0])
-
-arr = np.array(arr)
-df = pd.DataFrame(arr)
-
-df.head()
-
-new_df = df[[0, 2]].copy()
-test_dataset = new_df.rename(columns={0:"comment_text", 2:"list"})
-test_dataset.head()
 
 class CustomDataset(Dataset):
 
@@ -156,246 +68,183 @@ class CustomDataset(Dataset):
             'targets': torch.tensor(self.targets[index], dtype=torch.float)
         }
 
-class Args():
-    def __init__(self):
-        self.output_dir = 'ResultCSVs'
-        self.model_path = "ai4bharat/indic-bert"      # or try: 'mrm8488/HindiBERTa' or "monsoon-nlp/hindi-tpu-electra" or "ai4bharat/indic-bert"
-        self.tokenizer_path = "ai4bharat/indic-bert"
+class ModelClass(torch.nn.Module):
+    def __init__(self, model_path, dropout, target_labels):
+        super(ModelClass, self).__init__()
+        self.l1 = AutoModel.from_pretrained(model_path)
+        self.l2 = torch.nn.Dropout(dropout)
+        if "hindi-bert" in model_path:
+            self.hidden_size = 256
+        else:
+            self.hidden_size = 768
+        self.l3 = torch.nn.Linear(self.hidden_size, target_labels)
+
+    def forward(self, ids, mask, token_type_ids):
+        output_1= self.l1(ids, attention_mask = mask, token_type_ids = token_type_ids)
+        output_2 = self.l2(output_1[0][:,0,:])
+        output = self.l3(output_2)
+        return output
+
+
+
+class bin_classifier():
+    def __init__(self, arr, model_name, target, epochs, lr):
+        self.output_dir = './models'
+        self.model_path = model_name 
+        self.tokenizer_path = model_name
         self.max_len = 200
-        self.TRAIN_BATCH_SIZE = 16
-        self.VALID_BATCH_SIZE = 8
-        self.epochs = 10
-        self.lr = 1e-5
-        self.target_labels = 3
+        self.TRAIN_BATCH_SIZE = 8
+        self.VALID_BATCH_SIZE = 4
+        self.epochs = epochs
+        self.lr = lr
+        self.target_labels = 1
         self.dropout = 0.3
-        self.train_size = 0.8
+        self.train_size = 0.8759
         self.seed = 23
         self.random_state = 200
         self.n_gpu=1
-args = Args()
+        self.target = target
+        self.encoding = arr[:, 2]
+        self.arr = arr.tolist()
+        self.device = 'cuda' if cuda.is_available() else 'cpu'
+        if self.target=='non-hostile':
+            for i in range(0,len(self.encoding)):
+                self.arr[i].append([self.encoding[i][0]])
+            self.arr = np.array(self.arr)
+            tr = self.arr[0:5728]
+            ts = self.arr[5728:]
+            df_tr = pd.DataFrame(tr)
+            df_ts = pd.DataFrame(ts)
+        else:
+            if self.target == 'hate':
+                x = 1
+            elif self.target == 'fake':
+                x = 2
+            elif self.target == 'defamation':
+                x = 3
+            else:
+                x = 4
+            a = []
+            for i in range(0, len(self.encoding)):
+                if self.encoding[i][0]==0:
+                    a.append(self.arr[i])
 
-def set_seed(args):
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    if args.n_gpu > 0:
-        torch.cuda.manual_seed_all(args.seed)
+            for i in range(0, len(a)):
+                a[i].append([a[i][-1][x]])
 
-set_seed(args)
+            a = np.array(a)
+            tr = a[0:2700]
+            ts = a[2700:]
+            df_tr = pd.DataFrame(tr)
+            df_ts = pd.DataFrame(ts)
+        new_df_tr = df_tr[[0, 3]].copy()
+        new_df_ts = df_ts[[0, 3]].copy()
+        self.new_df_tr = new_df_tr.rename(columns={0:"comment_text", 3:"list"})
+        self.new_df_ts = new_df_ts.rename(columns={0:"comment_text", 3:"list"})
+        self.set_seed()
 
-test_params = {'batch_size': args.VALID_BATCH_SIZE,
-                'shuffle': False,
+        tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_path)
+
+        
+        train_dataset=self.new_df_tr
+        test_dataset=self.new_df_ts
+        train_dataset = train_dataset.reset_index(drop=True)
+        
+
+
+        print("TRAIN Dataset: {}".format(train_dataset.shape))
+        print("TEST Dataset: {}".format(test_dataset.shape))
+
+        training_set = CustomDataset(train_dataset, tokenizer, self.max_len)
+        testing_set = CustomDataset(test_dataset, tokenizer, self.max_len)
+        train_params = {'batch_size': self.TRAIN_BATCH_SIZE,
+                'shuffle': True,
                 'num_workers': 0
                 }
 
-tokenizer = AutoTokenizer.from_pretrained(args.model_path)
+        test_params = {'batch_size': self.VALID_BATCH_SIZE,
+                'shuffle': True,
+                'num_workers': 0
+                }
 
-cd "./../../../"
+        self.training_loader = DataLoader(training_set, **train_params)
+        self.testing_loader = DataLoader(testing_set, **test_params)
+        self.model = ModelClass(self.model_path, self.dropout, self.target_labels)
+        self.model.to(self.device);
+        self.optimizer = torch.optim.Adam(params =  self.model.parameters(), lr=self.lr)
+        os.makedirs(self.output_dir, exist_ok=True)
 
-testing_set = CustomDataset(test_dataset, tokenizer, args.max_len)
-testing_loader = DataLoader(testing_set, **test_params)
+    def set_seed(self):
+        random.seed(self.seed)
+        np.random.seed(self.seed)
+        torch.manual_seed(self.seed)
+        if self.n_gpu > 0:
+            torch.cuda.manual_seed_all(self.seed)
 
-def validation(model, epoch):
-    model.eval()
-    fin_targets=[]
-    fin_outputs=[]
-    with torch.no_grad():
-        for _, data in enumerate(testing_loader, 0):
+    def loss_fn(self, outputs, targets):
+        return torch.nn.BCEWithLogitsLoss()(outputs, targets)
+
+    def validation(self, epoch):
+        device = self.device
+        self.model.eval()
+        fin_targets=[]
+        fin_outputs=[]
+        with torch.no_grad():
+            for _, data in enumerate(self.testing_loader, 0):
+                ids = data['ids'].to(device, dtype = torch.long)
+                mask = data['mask'].to(device, dtype = torch.long)
+                token_type_ids = data['token_type_ids'].to(device, dtype = torch.long)
+                targets = data['targets'].to(device, dtype = torch.float)
+                outputs = self.model(ids, mask, token_type_ids)
+                fin_targets.extend(targets.cpu().detach().numpy().tolist())
+                fin_outputs.extend(torch.sigmoid(outputs).cpu().detach().numpy().tolist())
+        return fin_outputs, fin_targets
+
+    def train(self, epoch):
+        device = self.device
+        self.model.train()
+        for _,data in enumerate(self.training_loader, 0):
             ids = data['ids'].to(device, dtype = torch.long)
             mask = data['mask'].to(device, dtype = torch.long)
             token_type_ids = data['token_type_ids'].to(device, dtype = torch.long)
             targets = data['targets'].to(device, dtype = torch.float)
-            outputs = model(ids, mask, token_type_ids)
-            fin_targets.extend(targets.cpu().detach().numpy().tolist())
-            fin_outputs.extend(torch.sigmoid(outputs).cpu().detach().numpy().tolist())
-    return fin_outputs, fin_targets
 
+            outputs = self.model(ids, mask, token_type_ids)
 
-
-cd "./.."
-
-model = "indic-bert"
-
-# change these path as per your model paths
-model_path = ["./final_models/"+ model +"_non-hostile_model.pt",
-              "./final_models/"+ model +"_fake_model_f1_aux.pt",
-              "./final_models/"+model +"_defamation_model_f1_aux.pt",
-              "./final_models/" + model+"_hate_model_f1_aux.pt",
-              "./final_models/"+model+"_offensive_model_f1_aux.pt"]
-
-for i in range(5):
-  model = torch.load(model_path[i])
-  if i==0:
-    host, _ = validation(model, 0)
-  if i==1:
-    fake, _ = validation(model, 0)
-  if i==2:
-    defame, _ = validation(model, 0)
-  if i==3:
-    hate, _ = validation(model, 0)
-  if i==4:
-    offen, _ = validation(model, 0)
-  print(".", end='')
-
-hostile = np.array(host)>0.5
-
-result = []
-for i in range(len(hostile)):
-  li = [0,0,0,0,0]
-  if hostile[i]==1:
-    li[0]=1
-    result.append(li)
-  else:
-    x = [hate[i], fake[i], defame[i], offen[i]];
-    x_np = np.array(x)>0.5
-    flag=0
-    if x_np[0]==1:
-      li[1]=1
-      flag=1
-    if x_np[1]==1:
-      li[2]=1
-      flag=1
-    if x_np[2]==1:
-      li[3]=1
-      flag=1
-    if x_np[3]==1:
-      li[4]=1
-      flag=1
-    if flag==0:
-      li[np.argmax(np.array(x))+1]=1
-    
-    result.append(li)
-
-final_result = []
-for i in range(len(hostile)):
-  li = [i]
-  if result[i][0]==1:
-    st = "non-hostile"
-  else:
-    st_list = []
-    x = result[i][1:]
-    if x[0]==1:
-      st_list.append("hate")
-    if x[1]==1:
-      st_list.append("fake")
-    if x[2]==1:
-      st_list.append("defamation")
-    if x[3]==1:
-      st_list.append("offensive")
-    
-    st = ",".join(st_list)
-  li = [i+1, st]
-  final_result.append(li)
-
-# Unique ID and Labels Set
-
-import pandas as pd
-from pandas import DataFrame
-
-df = DataFrame(final_result, columns=["Unique ID", "Labels Set"])
-
-df.head()
-
-df.to_csv("Submission1.csv", index=False)
-
-
-### Order of Labels --> [Hostile,defamation,fake,hate,offensive,non-hostile]
-### An example      --> [1,0,1,1,0,0]
-
-###########################################################################
-#################  Test data Evaluation based on Submission ###############
-###########################################################################
-
-import numpy as np
-import pandas as pd
-from sklearn.metrics import f1_score
-
-
-
-def preprocess(df):
-    
-    df = df.dropna()
-    
-    df.insert(len(df.columns)-1,'Hostile', np.zeros(len(df),dtype=int))
-    df.insert(len(df.columns)-1,'Defamation', np.zeros(len(df),dtype=int))
-    df.insert(len(df.columns)-1,'Fake', np.zeros(len(df),dtype=int))
-    df.insert(len(df.columns)-1,'Hate', np.zeros(len(df),dtype=int))
-    df.insert(len(df.columns)-1,'Offensive', np.zeros(len(df),dtype=int))
-    df.insert(len(df.columns)-1,'Non-Hostile', np.zeros(len(df),dtype=int))    
-    
-    for i in range(len(df)):
-        text = df['Labels Set'][i]
-        text = text.lower()
-        text = text.replace('\n',"")
-        text = text.replace('"',"")
-        text = text.replace(" ","")
-        text = text.split(',')
-
-
-        for word in text:
-            if word == 'defamation':
-                df.at[i,'Hostile']    = 1
-                df.at[i,'Defamation'] = 1
-    
-            if word == 'fake':
-                df.at[i,'Hostile']    = 1
-                df.at[i,'Fake'] = 1
-    
-            if word == 'hate':
-                df.at[i,'Hostile']    = 1
-                df.at[i,'Hate'] = 1
-    
-            if word == 'offensive':
-                df.at[i,'Hostile']    = 1
-                df.at[i,'Offensive'] = 1
-    
-            if word == 'non-hostile' and df['Hostile'][i]==0:
-                df.at[i,'Hostile']    = 0
-                df.at[i,'Non-Hostile'] = 1
-
-    return df 
-  
-
-
-def get_scores(y_true, y_pred):
-    
-    hostility_true = y_true['Hostile']
-    hostility_pred = y_pred['Hostile']
-    
-    hostility_f1 = f1_score(y_true=hostility_true, y_pred=hostility_pred, average='weighted')
-    
-    fine_true = y_true[['Defamation','Fake','Hate','Offensive']]
-    fine_pred = y_pred[['Defamation','Fake','Hate','Offensive']]
-    
-    fine_f1          = f1_score(y_true=fine_true, y_pred=fine_pred, average=None)
-    defame_f1        = fine_f1[0]
-    fake_f1          = fine_f1[1]
-    hate_f1          = fine_f1[2]
-    offensive_f1     = fine_f1[3]
-    weighted_fine_f1 = f1_score(y_true=fine_true, y_pred=fine_pred, average='weighted')
-
-    return [hostility_f1, defame_f1, fake_f1, hate_f1, offensive_f1, weighted_fine_f1]
-
-
-
-
-ground_truth_path      = r"./Dataset/Test Set Complete - test.csv"
-submission_file_path   = r"Submission1.csv"
-
-
-y_true = pd.read_csv(ground_truth_path, names=["Text", "Labels Set"])
-y_pred = pd.read_csv(submission_file_path)
-
-y_true = preprocess(y_true)
-y_pred = preprocess(y_pred)
-
-team_score = get_scores(y_true,y_pred)
-    
+            self.optimizer.zero_grad()
+            loss = self.loss_fn(outputs, targets)
+            if _%100==0:
+                print(f'Epoch: {epoch}, Loss:  {loss.item()}')
         
-print("Coarse Grained F1-score: ", team_score[0])
-print("Defamation F1-score:     ", team_score[1])
-print("Fake F1-score:           ", team_score[2])
-print("Hate F1-score:           ", team_score[3])
-print("Offensive F1-score:      ", team_score[4])
-print("Fine Grained F1-score:   ", team_score[5])
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+    def train_model(self):
+        Best_score = 0;
+        for epoch in range(self.epochs):
+            self.train(epoch)
+            outputs, targets = self.validation(epoch)
+            print(outputs[0:5])
+            outputs = np.array(outputs) >= 0.5
+            accuracy = metrics.accuracy_score(targets, outputs)
+            f1_score_micro = metrics.f1_score(targets, outputs, average='binary')
+            print(f"F1 Score (Weighted) = {f1_score_micro}")
+            print()
+            if f1_score_micro>Best_score:
+                # Save a trained model, configuration and tokenizer using `save_pretrained()`.
+                # They can then be reloaded using `from_pretrained()`
+                torch.save(self.model,os.path.join(self.output_dir, self.model_path[-10:] + "_" + self.target + "_model.pt"))
+
+                # Good practice: save your training arguments together with the trained model
+                # torch.save(args, os.path.join(self.output_dir, "training_args.bin"))
+                Best_score = f1_score_micro
+ 
+        
+        f1_str = "best f1 score for binary " + self.target + " classification is " + str(Best_score) + " for " + self.model_path[-10:] + "\n"
+        file_object = open('results.txt', 'a')
+        file_object.write(f1_str)
+        file_object.close()
+
+
 
