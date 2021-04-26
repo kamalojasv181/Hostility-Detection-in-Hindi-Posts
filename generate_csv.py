@@ -7,8 +7,8 @@ import transformers
 import re
 import emoji
 import string
-
 from sklearn.model_selection import train_test_split
+import csv
 
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
@@ -35,9 +35,6 @@ device = 'cuda' if cuda.is_available() else 'cpu'
 
 csv_file_path = "./Dataset/Test Set Complete - test.csv"
 
-
-
-import csv
 arr = []
 with open(csv_file_path) as csvDataFile:
     csvReader = csv.reader(csvDataFile)
@@ -219,71 +216,12 @@ cd "./.."
 
 model = "indic-bert"
 
+# change these path as per your model paths
 model_path = ["./final_models/"+ model +"_non-hostile_model.pt",
               "./final_models/"+ model +"_fake_model_f1_aux.pt",
               "./final_models/"+model +"_defamation_model_f1_aux.pt",
               "./final_models/" + model+"_hate_model_f1_aux.pt",
               "./final_models/"+model+"_offensive_model_f1_aux.pt"]
-
-def create_embeddings(model, epoch):
-    model.eval()
-    fin_targets=[]
-    fin_outputs=[]
-    with torch.no_grad():
-        for _, data in enumerate(testing_loader, 0):
-            ids = data['ids'].to(device, dtype = torch.long)
-            mask = data['mask'].to(device, dtype = torch.long)
-            token_type_ids = data['token_type_ids'].to(device, dtype = torch.long)
-            targets = data['targets'].to(device, dtype = torch.float)
-            output_1= model.l1(ids, attention_mask = mask, token_type_ids = token_type_ids)
-            output_1_dash= model.l1_dash(ids, attention_mask = mask, token_type_ids = token_type_ids)
-            output_2 = output_1[0][:,0,:]
-            output_2_dash = output_1_dash[0][:,0,:]
-            output_4 = torch.squeeze(torch.cat((output_2_dash, output_2), dim=1)).to('cuda')
-            fin_targets.extend(targets.cpu().detach().numpy().tolist())
-            fin_outputs.extend(torch.sigmoid(output_4).cpu().detach().numpy().tolist())
-    return np.array(fin_outputs), np.array(fin_targets)
-
-model = torch.load(model_path[2])
-
-x_train, y_train = create_embeddings(model, 0)
-
-x_test, y_test = create_embeddings(model, 0)
-
-np.save("test_embeddings.npy", x_test)
-np.save("target_labels_test.npy", y_test)
-
-np.save("train_embeddings.npy", x_train)
-np.save("target_labels_train.npy", y_train)
-
-y_train_ = y_train[:, 3]
-
-x_train_reduced = x_train[:,:768]
-x_test_reduced = x_test[:, :768]
-
-from sklearn import svm
-clf = svm.SVC(C=0.01, gamma = 1,kernel = "linear")
-clf.fit(x_train, y_train_)
-
-from sklearn.linear_model import LogisticRegression
-clf = LogisticRegression(random_state=0, max_iter=1000).fit(x_train, y_train_)
-
-
-
-
-
-from sklearn.metrics import f1_score
-
-y_pred = clf.predict(x_test)
-
-y_pred[:10]
-
-y_test[:,3][:10]==y_test[:,][]
-
-
-
-f1_score(y_true=y_test[:,3], y_pred=y_pred, average="binary")
-
 
 for i in range(5):
   model = torch.load(model_path[i])
@@ -298,10 +236,6 @@ for i in range(5):
   if i==4:
     offen, _ = validation(model, 0)
   print(".", end='')
-
-
-
-import numpy as np
 
 hostile = np.array(host)>0.5
 
@@ -331,8 +265,6 @@ for i in range(len(hostile)):
       li[np.argmax(np.array(x))+1]=1
     
     result.append(li)
-
-result;
 
 final_result = []
 for i in range(len(hostile)):
@@ -366,15 +298,13 @@ df.head()
 
 df.to_csv("Submission1.csv", index=False)
 
-df = pd.read_csv("Submission1.csv")
-
-df.head()
-
-
 
 ### Order of Labels --> [Hostile,defamation,fake,hate,offensive,non-hostile]
 ### An example      --> [1,0,1,1,0,0]
 
+###########################################################################
+#################  Test data Evaluation based on Submission ###############
+###########################################################################
 
 import numpy as np
 import pandas as pd
