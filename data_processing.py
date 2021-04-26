@@ -12,7 +12,8 @@ class preprocessing():
         with open(csv_file_path) as csvDataFile:
             csvReader = csv.reader(csvDataFile)
             for row in csvReader:
-                self.arr.append(row)
+                self.arr.append(row[1:])
+            self.arr = self.arr[1:]
 
     def give_emoji_free_text(self, text):
         allchars = [str for str in text]
@@ -75,4 +76,4 @@ class preprocessing():
         for i in range(0,len(encoding)):
             self.arr[i].append(encoding[i])
         self.arr = np.array(self.arr)
-        return self.arr 
+        return self.arr
