@@ -75,7 +75,7 @@ Performance of our best model, i.e. Auxiliary Indic Bert on the Test Dataset.
 |Baseline Model|0.8422|0.3992|0.6869|0.4926|0.4198|0.542|
 |Indic-Bert Auxiliary Model|0.9583|0.42|0.7741|0.5725|0.6120|0.6250|
 
-Please note that due to the skewed and biased dataset, along with model here not being perfectly reproducible, slight variations in final state of the model may lead the results to vary by 0.02-0.03 f1 scores (as has been observed by us in different runs for same model). Refer [this](https://pytorch.org/docs/stable/notes/randomness.html#:~:text=Completely%20reproducible%20results%20are%20not,even%20when%20using%20identical%20seeds.) for more details.
+Please note that due to the skewed nature of dataset (in terms of class imbalance and biasness), along with model here not being perfectly reproducible, slight variations in final state of the model may lead the results to vary by 0.02-0.03 f1 scores (as has been observed by us in different runs for same model). Refer [this](https://pytorch.org/docs/stable/notes/randomness.html#:~:text=Completely%20reproducible%20results%20are%20not,even%20when%20using%20identical%20seeds.) for more details.
 
 ## Updates to be done
 - [x] Resolve issues with main_multitask_learning.py
