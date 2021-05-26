@@ -1,5 +1,5 @@
 # Dataset
 
-**Data Source**: The dataset can not be made public as per the guidelines of AAAI conference. In order to obtain the data, kindly register for constraint shared task at  https://competitions.codalab.org/competitions/26654#learn_the_details
+**Data Source**: Please find the dataset at the official github repo of the shared task at https://github.com/mohit19014/Hindi-Hostility-Detection-CONSTRAINT-2021
 
 After getting the access to the dataset, save them in this folder with the pre-defined names and .csv. After saving the dataset, remove the first row and and first column as the code has been written that way.
